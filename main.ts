@@ -96,6 +96,30 @@ app.delete("/kv/full_reset_42", async (c) => {
   return c.json({ keys });
 });
 
+// Database-wide stats (requires valid ?token=)
+// https://pg4e-deno-kv-api-10.deno.dev/stats?token=your_token
+app.get("/stats", async (c) => {
+  checkToken(c);
+  const tokens = new Set<string>();
+  const tenants = new Set<string>();
+  let total_keys = 0;
+
+  for await (const entry of kv.list({ prefix: [] })) {
+    total_keys++;
+    const first = entry.key[0];
+    if (typeof first !== "string") continue;
+    tokens.add(first);
+    const colon = first.indexOf(":");
+    if (colon > 0) tenants.add(first.slice(0, colon));
+  }
+
+  return c.json({
+    total_keys,
+    distinct_tokens: tokens.size,
+    distinct_tenants: tenants.size,
+  });
+});
+
 // Dump the request object for learning and debugging
 // https://pg4e-deno-kv-api-10.deno.dev/dump/stuff/goes_here?key=123
 app.all('/dump/*', async (c) => {
