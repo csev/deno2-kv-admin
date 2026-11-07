@@ -18,7 +18,7 @@ debug(
 );
 
 const app = new Hono();
-const kv = await Deno.openKv("/var/lib/deno2-kv-admin/admin.kv");
+const kv = await Deno.openKv();
 debug("[kv-admin] Deno KV opened");
 
 // Basic KV operations to support admin interface
@@ -216,7 +216,7 @@ function publicEntry<T>(entry: Deno.KvEntry<T>): {
 // If you are putting up your own server you can either delete this
 // CRON entry or change the schedule (for example "0 0 1 * *" for monthly).
 Deno.cron("Daily DB Reset", "0 0 * * *", async () => {
-  const ckv = await Deno.openKv("/var/lib/deno2-kv-admin/admin.kv");
+  const ckv = await Deno.openKv();
   const iter = await ckv.list({ prefix: [] });
   const keys = [];
   let count = 0;
@@ -228,4 +228,4 @@ Deno.cron("Daily DB Reset", "0 0 * * *", async () => {
   console.log("Daily reset keys deleted:", count, keys);
 });
 
-Deno.serve({ hostname: "127.0.0.1", port: 8003 }, app.fetch);
+Deno.serve(app.fetch);
